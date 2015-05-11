@@ -13,6 +13,7 @@ String message;    //incoming messages string
 char temp;
 int timestamp;
 int dataAmount;
+String phone_number="15208204270";
 
 void setup()
 {
@@ -20,6 +21,8 @@ void setup()
   Serial.begin(19200);             // the Serial port of Arduino baud rate.
   delay(3000);                    // because... you know
   GPRS.write("AT+CMGF=1\r\n");
+  delay(500);
+  GPRS.println("AT+CMGDA=\"DEL ALL\"");
 }
  
 void loop()
@@ -63,7 +66,18 @@ void loop()
    
    //Check for message to parse
    if(message.indexOf("+CMGR:") != -1) {
-     Serial.println("Message read");
+     message.toLowerCase();
+     if(message.indexOf("start")!=-1){
+       start();
+     }
+     if(message.indexOf("stop")!=-1){
+       stop_engine();
+     }
+     else if(message.indexOf("ping")!=-1){
+       ping();
+     }
+     GPRS.println("AT+CMGDA=\"DEL ALL\"");
+     delay(500);
    }
   message="";
 }
@@ -72,7 +86,6 @@ void read_message(int message_number){
   GPRS.print("AT+CMGR="); 
   GPRS.print(message_number);
   GPRS.print("\r\n");
-  //delay(1000);
   while(GPRS.available()){
     Serial.print(char(GPRS.read()));
   }
@@ -80,6 +93,28 @@ void read_message(int message_number){
 
 int start(){
   //Try to start
-  
+  Serial.println("Starting...");
+  send_text("Starting...");
   return 0;
+}
+
+int stop_engine(){
+  Serial.println("Stopping...");
+  send_text("Stopping...");
+  return 0;
+}
+
+void ping(){
+  Serial.println("Sending ping...");
+  send_text("PONG");
+  Serial.println("ping sent");
+}
+
+void send_text(String toSend){
+  GPRS.println("AT+CMGS=\"+"+phone_number+"\"");
+  delay(3000);
+  GPRS.println(toSend);
+  GPRS.println("\x1A");
+  delay(10000);
+  Serial.println("Message sent");
 }
